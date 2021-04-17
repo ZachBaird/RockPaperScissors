@@ -1,4 +1,36 @@
 ﻿@page
 @model OreoRPS.Pages.GameModel
 @{
+    ViewData["Title"] = "Oreo | Rock Paper Scissors";
 }
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <label>Name: </label>
+            <input type="text" id="playerName" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-4">
+            <button id="rock">Rock</button>
+        </div>
+        <div class="col-xs-4">
+            <button id="paper">Paper</button>
+        </div>
+        <div class="col-xs-4">
+            <button id="scissors">Scissors</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <ul id="scoreBoard"></ul>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/signalr/dist/browser/signalr.js"></script>
+<script src="~/js/game.js"></script>
