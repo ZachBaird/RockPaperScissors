@@ -21,6 +21,13 @@ disableChoices(choices);
 
 connection.on('ReceiveMove', (user, message) => {
     const li = document.createElement('li');
+    li.textContent = `${user}: ${message}`;
+    li.classList.add('game-log');
+    document.getElementById('scoreBoard').appendChild(li);
+});
+
+connection.on('NoWinner', (message) => {
+    const li = document.createElement('li');
     li.textContent = `${message}`;
     document.getElementById('scoreBoard').appendChild(li);
 });

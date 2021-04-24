@@ -2,7 +2,6 @@
 using OreoRPS.Handlers;
 using OreoRPS.Models;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace OreoRPS.Hubs
@@ -15,33 +14,32 @@ namespace OreoRPS.Hubs
         /// <summary>
         /// Override method to add and track the users connected to the hub.
         /// </summary>
-        /// <returns>A task.</returns>
-        public override Task OnConnectedAsync()
-        {
+        public async override Task OnConnectedAsync()
+        {            
             // We only want 2 players to be able to play.
-            if (UserHandler.UserCount < 2)
+            if (UserHandler.PlayerCount < 2)
             {
-                UserHandler.ConnectedIds.Add(Context.ConnectionId);
-                UserHandler.Users.Add(new User
+                UserHandler.Players.Add(new User
                 {
-                    ConnectionId = Context.ConnectionId,
-                    Move = ""
+                    ConnectionId = Context.ConnectionId
                 });
             }
 
-            return base.OnConnectedAsync();
+            await base.OnConnectedAsync();
         }
 
         /// <summary>
         /// Override method to remove added players.
         /// </summary>
         /// <param name="exception"></param>
-        /// <returns>A task.</returns>
-        public override Task OnDisconnectedAsync(Exception exception)
+        public async override Task OnDisconnectedAsync(Exception exception)
         {
-            UserHandler.ConnectedIds.Remove(Context.ConnectionId);
-            UserHandler.Users.Remove(UserHandler.Users.Find(u => u.ConnectionId == Context.ConnectionId));
-            return base.OnDisconnectedAsync(exception);
+            var playerToRemove = UserHandler
+                .Players.Find(u => u.ConnectionId == Context.ConnectionId);
+
+            UserHandler.Players.Remove(playerToRemove);
+
+            await base.OnDisconnectedAsync(exception);
         }
 
         /// <summary>
@@ -49,39 +47,39 @@ namespace OreoRPS.Hubs
         /// </summary>
         /// <param name="user">The user.</param>
         /// <param name="choice">The user's choice.</param>
-        /// <returns>A task.</returns>
         public async Task SendMove(string user, string choice)
         {
-            if (UserHandler.Users.Count == 2)
+            if (UserHandler.Players.Count == 2)
             {
-                if (UserHandler.ConnectedIds.Contains(Context.ConnectionId) &&
-                    UserHandler.CheckHand())
+                if (UserHandler.PlayerIsInGame(Context.ConnectionId))
                 {
-                    // Add the user's name to the class in case it isn't there.
                     UserHandler
-                        .Users
-                        .Find(u => u.ConnectionId == Context.ConnectionId)
-                        .Name = user;
-
-                    UserHandler
-                        .Users
+                        .Players
                         .Find(u => u.ConnectionId == Context.ConnectionId)
                         .Move = choice;
 
+                    UserHandler
+                        .Players
+                        .Find(u => u.ConnectionId == Context.ConnectionId)
+                        .Name = user;
+
                     if (!UserHandler.CheckHand())
                     {
-                        var (winner, winnerExists) = GameHandler.DetermineWinner(UserHandler.Users[0], UserHandler.Users[1]);
+                        var (player1, player2) = UserHandler.GetPlayers();
+
+                        var (winner, winnerExists) =
+                            GameHandler.DetermineWinner(player1, player2);
 
                         if (winnerExists)
-                            await Clients.All.SendAsync("ReceiveMove", winner.Name, $"{winner.Name} has won with {winner.Move}!");
+                        {
+                            await Clients.All.SendAsync("ReceiveMove", winner.Name, $"Won with {winner.Move}!");
+                            UserHandler.ResetHands();
+                        }
                         else
                         {
-                            await Clients.All.SendAsync("ReceiveMove", user, "There was no winner. Try again!");
+                            await Clients.All.SendAsync("NoWinner", $"No winner with {player1.Move} & {player2.Move}. Try again!");
+                            UserHandler.ResetHands();
                         }
-                    }
-                    else
-                    {
-                        await Clients.All.SendAsync("ReceiveMove", user, "No winner. Try again!");
                     }
                 }
             }

@@ -10,39 +10,50 @@ namespace OreoRPS.Handlers
     public static class UserHandler
     {
         /// <summary>
-        /// The first player's choice.
-        /// </summary>
-        public static string player1Choice = "";
-
-        /// <summary>
-        /// The second player's choice.
-        /// </summary>
-        public static string player2Choice = "";
-
-        /// <summary>
-        /// HashSet of the connected user ids.
-        /// </summary>
-        public static HashSet<string> ConnectedIds = new HashSet<string>();
-
-        /// <summary>
         /// List of users.
         /// </summary>
-        public static List<User> Users = new List<User>();
+        public static List<User> Players = new List<User>();
 
         /// <summary>
         /// Convenience method to get the number of connected users.
         /// </summary>
-        public static int UserCount => ConnectedIds.Count;
+        public static int PlayerCount => Players.Count;
+        
+        /// <summary>
+        /// Convenience method to get the two players in the game.
+        /// </summary>
+        /// <returns></returns>
+        public static (User, User) GetPlayers()
+        {
+            var player1 = Players[0];
+            var player2 = Players[1];
+
+            return (player1, player2);
+        }
+
+        /// <summary>
+        /// Determines if a connection id is a specific player.
+        /// </summary>
+        /// <param name="connectionId">The connection id to test.</param>
+        /// <returns>True if the player is in the game, false if not.</returns>
+        public static bool PlayerIsInGame(string connectionId) => 
+            Players.Select(p => p.ConnectionId).Contains(connectionId);
 
         public static bool CheckHand()
         {
-            if (Users.All(u => string.IsNullOrWhiteSpace(u.Move)) ||
-                Users.Any(u => string.IsNullOrWhiteSpace(u.Move)))
-            {
+            if (Players.Any(u => string.IsNullOrWhiteSpace(u.Move)))            
                 return true;
-            }
+            else
+                return false;
+        }
 
-            return false;
+        /// <summary>
+        /// Sets the <see cref="User" />'s hands to empty strings.
+        /// </summary>
+        public static void ResetHands()
+        {
+            foreach (var player in Players)
+                player.Move = string.Empty;
         }
     }
 }
