@@ -15,15 +15,12 @@ namespace OreoRPS.Hubs
         /// Override method to add and track the users connected to the hub.
         /// </summary>
         public async override Task OnConnectedAsync()
-        {            
-            // We only want 2 players to be able to play.
-            if (UserHandler.PlayerCount < 2)
-            {
-                UserHandler.Players.Add(new User
+        {
+            UserHandler.Users.Add(
+                new User
                 {
                     ConnectionId = Context.ConnectionId
                 });
-            }
 
             await base.OnConnectedAsync();
         }
@@ -34,13 +31,32 @@ namespace OreoRPS.Hubs
         /// <param name="exception"></param>
         public async override Task OnDisconnectedAsync(Exception exception)
         {
-            var playerToRemove = UserHandler
-                .Players.Find(u => u.ConnectionId == Context.ConnectionId);
-
-            UserHandler.Players.Remove(playerToRemove);
+            UserHandler.RemoveUser(Context.ConnectionId);
 
             await base.OnDisconnectedAsync(exception);
         }
+
+        /// <summary>
+        /// Sets a user up when they set their name.
+        /// </summary>
+        /// <param name="name">The name the user chose.</param>        
+        public Task SetUser(string name)
+        {
+            UserHandler.SetUser(Context.ConnectionId, name);
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Sends a chat message to the rest of the users.
+        /// </summary>
+        /// <param name="user">The name of the sender.</param>
+        /// <param name="message">Their message.</param>        
+        public async Task SendMessage(string user, string message)
+        {
+            await Clients.All.SendAsync("ReceiveMessage", user, message);
+        }
+
 
         /// <summary>
         /// Receives a move from the client and emits the user choice down to the clients.

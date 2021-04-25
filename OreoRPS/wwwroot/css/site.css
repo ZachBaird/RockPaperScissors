@@ -52,10 +52,26 @@ button.accept-policy {
 }
 
 /* RPS Styles */
-.game-log {
+.list-member {
     list-style: none !important;
     font-size: 18px !important;
     margin: 20px !important;
+}
+
+#game-controls {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+#scoreBoard {
+    height: 200px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 /* Sticky footer styles
