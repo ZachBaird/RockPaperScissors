@@ -22,6 +22,19 @@ namespace OreoRPS.Hubs
                     ConnectionId = Context.ConnectionId
                 });
 
+            if (UserHandler.Players.Count >= 1)
+                await Clients.All.SendAsync(
+                    "SetPlayer",
+                    UserHandler.Players[0].Name,
+                    "firstUser");
+
+            if (UserHandler.Players.Count == 2)
+                await Clients.All.SendAsync(
+                    "SetPlayer",
+                    UserHandler.Players[1].Name,
+                    "secondUser");
+
+
             await base.OnConnectedAsync();
         }
 
@@ -40,11 +53,21 @@ namespace OreoRPS.Hubs
         /// Sets a user up when they set their name.
         /// </summary>
         /// <param name="name">The name the user chose.</param>        
-        public Task SetUser(string name)
+        public async Task SetUser(string name)
         {
-            UserHandler.SetUser(Context.ConnectionId, name);
+            var userIndex = UserHandler.SetUser(Context.ConnectionId, name);
 
-            return Task.CompletedTask;
+            string nameId = userIndex switch
+            {
+                0 => "firstUser",
+                1 => "secondUser",
+                _ => ""
+            };
+
+            await Clients.All.SendAsync(
+                "SetPlayer",
+                name,
+                nameId);
         }
 
         /// <summary>
@@ -74,6 +97,7 @@ namespace OreoRPS.Hubs
                         .Find(u => u.ConnectionId == Context.ConnectionId)
                         .Move = choice;
 
+                    // Set user's name incase it isn't set.
                     UserHandler
                         .Players
                         .Find(u => u.ConnectionId == Context.ConnectionId)
@@ -88,18 +112,47 @@ namespace OreoRPS.Hubs
 
                         if (winnerExists)
                         {
-                            await Clients.All.SendAsync("ReceiveMove", winner.Name, $"Won with {winner.Move}!");
+                            await Clients.All.SendAsync(
+                                "ReceiveMove",
+                                winner.Name,
+                                $"Won with {winner.Move}!");
+
                             UserHandler.ResetHands();
+
+                            await Clients.All.SendAsync(
+                                "ResetHands",
+                                player1.Name,
+                                player2.Name);
                         }
                         else
                         {
-                            await Clients.All.SendAsync("NoWinner", $"No winner with {player1.Move} & {player2.Move}. Try again!");
+                            await Clients.All.SendAsync(
+                                "NoWinner",
+                                $"No winner with {player1.Move} & {player2.Move}. Try again!");
+
                             UserHandler.ResetHands();
+
+                            await Clients.All.SendAsync(
+                                "ResetHands",
+                                player1.Name,
+                                player2.Name);
                         }
                     }
+                    var playerWhoPlayed = UserHandler.Players.Find(p => p.ConnectionId == Context.ConnectionId);
+                    var playerId = UserHandler.Players.IndexOf(playerWhoPlayed) switch
+                    {
+                        0 => "firstUser",
+                        1 => "secondUser",
+                        _ => ""
+                    };
+
+                    await Clients.All.SendAsync(
+                        "UpdateMove",
+                        user,
+                        playerId);
                 }
             }
-            else            
+            else       
                 await Clients.All.SendAsync("ReceiveMove", user, "Error: you played by yourself. Move stored.");            
         }
     }

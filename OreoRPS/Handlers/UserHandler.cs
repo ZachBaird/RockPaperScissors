@@ -41,7 +41,7 @@ namespace OreoRPS.Handlers
         /// </summary>
         /// <param name="connectionId">The user's connection Id.</param>
         /// <param name="name">The user's name.</param>
-        public static void SetUser(string connectionId, string name)
+        public static int SetUser(string connectionId, string name)
         {
             if (PlayerCount < 2)
             {
@@ -50,7 +50,11 @@ namespace OreoRPS.Handlers
 
                 Players.Add(newPlayer);
                 Users.Remove(newPlayer);
+
+                return Players.IndexOf(newPlayer);
             }
+
+            return -1;
         }
 
         /// <summary>

@@ -48,11 +48,24 @@ disableChoices(choices);
 // Disable send button until connection is established.
 chatSendButton.disabled = true;
 
+connection.on("SetPlayer", (name, htmlId) => {
+    document.getElementById(htmlId).innerText = `${name}: `;
+});
+
 connection.on('ReceiveMove', (user, message) => {
     scoreBoard.innerHTML = ``;
     const p = document.createElement('p');
     p.textContent = `${user}: ${message}`;
     scoreBoard.appendChild(p);
+});
+
+connection.on('UpdateMove', (user, htmlId) => {
+    document.getElementById(htmlId).innerText = `${user}: played...`;
+});
+
+connection.on('ResetHands', (firstName, secondName) => {
+    document.getElementById('firstUser').innerText = `${firstName}: `;
+    document.getElementById('secondUser').innerText = `${secondName}: `;
 });
 
 connection.on('NoWinner', (message) => {
